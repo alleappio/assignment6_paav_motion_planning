@@ -8,7 +8,7 @@ class SimulationParameters:
     controller = 'purepursuit'
     figures_path = 'figures/general'
     vehicle_model = [
-        ("rk4", "kinematic"),
+        ("rk4", "nonlinear"),
     ]
 
 

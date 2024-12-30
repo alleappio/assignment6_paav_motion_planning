@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib
@@ -257,7 +258,8 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     return x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals, alpha_f_vals, alpha_r_vals, frenet_x, frenet_y
 
 def main():
-
+    if(not os.path.exists(sim_params.figures_path)):
+        os.makedirs(sim_params.figures_path)
     # List of configurations
     configs = [
         ("rk4", "nonlinear"),
