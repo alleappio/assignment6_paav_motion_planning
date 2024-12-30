@@ -6,39 +6,25 @@ from simulation import Simulation
 import pid
 import purepursuit
 import stanley
-from mpc import *
+import mpc
 import cubic_spline_planner
 import math
 import frenet_optimal_trajectory as fp 
-matplotlib.use('TkAgg')  # Or 'Agg', 'Qt5Agg', etc.
+from parameters import SimulationParameters as sim_params
+from parameters import VehicleParameters as vehicle_params
+from parameters import PIDParameters as PID_params
+from parameters import PurepursuitParameters as PP_params
+from parameters import StanleyParameters as stanley_params
+from parameters import MpcParameters as MPC_params
 
-# Simulation parameters
-dt = 0.05         # Time step (s)
-ax = 0.0            # Constant longitudinal acceleration (m/s^2)
-steer = 0.0      # Constant steering angle (rad)
-sim_time = 67.5      # Simulation duration in seconds
-steps = int(sim_time / dt)  # Simulation steps (30 seconds)
-
-# Control references
-target_speed = 15.0
-
-# Vehicle parameters
-lf = 1.156          # Distance from COG to front axle (m)
-lr = 1.42           # Distance from COG to rear axle (m)
-wheelbase = lf + lr
-mass = 1200         # Vehicle mass (kg)
-Iz = 1792           # Yaw moment of inertia (kg*m^2)
-max_steer = 3.14  # Maximum steering angle in radians
+matplotlib.use('Qt5Agg')  # Or 'Agg', 'Qt5Agg', etc.
 
 # Create instance of PID for Longitudinal Control
-long_control_pid = pid.PIDController(kp=0.001, ki=0.001, kd=0.001, output_limits=(-2, 2))
+long_control_pid = pid.PIDController(kp=PID_params.kp, ki=PID_params.ki, kd=PID_params.kd, output_limits=PID_params.output_limits)
 
-# Create instance of PurePursuit, Stanley and MPC for Lateral Control
-k_pp = 0.001  # Speed proportional gain for Pure Pursuit
-look_ahead = 1.0  # Minimum look-ahead distance for Pure Pursuit
-k_stanley = 0.001  # Gain for cross-track error for Stanley
-pp_controller = purepursuit.PurePursuitController(wheelbase, max_steer)
-stanley_controller = stanley.StanleyController(k_stanley, lf, max_steer)
+pp_controller = purepursuit.PurePursuitController(vehicle_params.wheelbase, vehicle_params.max_steer)
+stanley_controller = stanley.StanleyController(stanley_params.k_stanley, vehicle_params.lf, vehicle_params.max_steer, stanley_params.k_he, stanley_params.k_ctc)
+mpc_controller = mpc.MPC(MPC_params.T, MPC_params.dt, MPC_params.N, vehicle_params.max_steer, vehicle_params.min_steer, MPC_params.gain_mult)
 
 #Planning
 # obstacle lists
@@ -74,7 +60,7 @@ def point_transform(trg, pose, yaw):
 
     return local_trg
 
-def plot_comparison(results, labels, title, xlabel, ylabel):
+def plot_comparison(results, labels, title, xlabel, ylabel, show = False):
     """ Plot comparison of results for a specific state variable. """
     plt.figure(figsize=(10, 6))
     for i, result in enumerate(results):
@@ -84,9 +70,13 @@ def plot_comparison(results, labels, title, xlabel, ylabel):
     plt.ylabel(ylabel)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(f"{sim_params.figures_path}/{title}.png")
+    if(show):
+        plt.show()
+    else:
+        plt.close()
 
-def plot_trajectory(x_vals, y_vals, labels, path_spline, frenet_x_results, frenet_y_results):
+def plot_trajectory(x_vals, y_vals, labels, path_spline, frenet_x_results, frenet_y_results, show=False):
     """ Plot 2D trajectory (x vs y) for all simulation configurations and path_spline trajectory. """
     plt.figure(figsize=(10, 6))
     
@@ -115,19 +105,22 @@ def plot_trajectory(x_vals, y_vals, labels, path_spline, frenet_x_results, frene
     plt.grid(True)
     plt.axis("equal")
     plt.show()
+    plt.savefig(f"{sim_params.figures_path}/trajectory.png")
+    if(show):
+        plt.show()
 
 def run_simulation(ax, steer, dt, integrator, model, steps=500):
     """ Run a simulation with the given parameters and return all states. """
 
     # Initialize the simulation
-    sim = Simulation(lf, lr, mass, Iz, dt, integrator=integrator, model=model)
+    sim = Simulation(vehicle_params.lf, vehicle_params.lr, vehicle_params.mass, vehicle_params.Iz, dt, integrator=integrator, model=model)
 
     # Storage for state variables and slip angles
     x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals = [], [], [], [], [], []
     alpha_f_vals, alpha_r_vals = [], []  # Slip angles
     frenet_x, frenet_y = [], []
 
-    casadi_model()
+    mpc_controller.casadi_model()
 
     # states for Frenet-planner
     c_speed = 0.0  # current speed [m/s]
@@ -140,10 +133,10 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     for step in range(steps):
     
         # Print time
-        print("Time:", step*dt)
+        # print("Time:", step*dt)
 
         # Calculate ax to track speed
-        ax = long_control_pid.compute(target_speed, sim.vx, dt)
+        ax = long_control_pid.compute(sim_params.target_speed, sim.vx, dt)
 
         ############# Frenet-planner
 
@@ -151,7 +144,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             path_spline, s0, c_speed, c_accel, c_d, c_d_d, c_d_dd, ob)
         
         if(frenet_path is None):
-            print("None available paths found from Frenet...")
+            # print("None available paths found from Frenet...")
             break
 
         frenetpath_spline = cubic_spline_planner.Spline2D(frenet_path.x, frenet_path.y)
@@ -195,14 +188,17 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             break
 
         # get target pose
-        Lf = k_pp * sim.vx + look_ahead #Bonus: include here the curvature dependency
+        Lf = PP_params.k_v * sim.vx + PP_params.look_ahead 
+        if(abs(path_spline.calc_curvature(path_spline.cur_s)) > PP_params.limit_curvature):
+            Lf += PP_params.k_c / abs(path_spline.calc_curvature(path_spline.cur_s))
+
         s_pos = frenetpath_spline.cur_s + Lf # TO-DO: Extend it to depend on curvature and/or speed
 
         trg = frenetpath_spline.calc_position(s_pos)
         trg = [ trg[0], trg[1] ]
         pp_position = actual_position
         # Adjust CoG position to the rear axle position for PP
-        pp_position = actual_position[0] + lr * math.cos(sim.theta), actual_position[1] + lr * math.sin(sim.theta)
+        pp_position = actual_position[0] + vehicle_params.lr * math.cos(sim.theta), actual_position[1] + vehicle_params.lr * math.sin(sim.theta)
         loc_trg = point_transform(trg, pp_position, sim.theta)
 
         # Calculate steer to track path
@@ -210,29 +206,32 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         ####### Pure Pursuit
         # steer = 0
         # Compute the look-ahead distance
-        steer = pp_controller.compute_steering_angle(loc_trg, sim.theta, Lf)
+        if(sim_params.controller == 'purepursuit'):
+            steer = pp_controller.compute_steering_angle(loc_trg, sim.theta, Lf)
         
         ###### Stanley
         #TO-DO: Move actual position (CoG) to the front axle for stanley
         # Adjust CoG position to the front axle position
-        # px_front = local_position_projected[0] + lf * math.cos(sim.theta)
-        # py_front = local_position_projected[1] + lf * math.sin(sim.theta)
-        # stanley_target = px_front, py_front, frenetpath_spline.calc_yaw(frenetpath_spline.cur_s)
-        # steer = stanley_controller.compute_steering_angle(actual_pose, stanley_target, sim.vx)
+        if(sim_params.controller == 'stanley'):
+            px_front = local_position_projected[0] + vehicle_params.lf * math.cos(sim.theta)
+            py_front = local_position_projected[1] + vehicle_params.lf * math.sin(sim.theta)
+            actual_pose = px_front, py_front, sim.theta
+            stanley_target = px_front, py_front, frenetpath_spline.calc_yaw(frenetpath_spline.cur_s)
+            steer = stanley_controller.compute_steering_angle(actual_pose, stanley_target, sim.vx)
 
         ###### MPC
-
-        # get future horizon targets pose
-        targets = [ ]
-        s_pos = frenetpath_spline.cur_s
-        for i in range(N):
-            step_increment = (sim.vx)*dt
-            trg = frenetpath_spline.calc_position(s_pos)
-            t_yaw = frenetpath_spline.calc_yaw(s_pos)
-            trg = [ trg[0], trg[1], t_yaw ]
-            targets.append(trg)
-            s_pos += step_increment
-        # steer = opt_step(targets, sim)
+        if(sim_params.controller == 'mpc'):
+            # get future horizon targets pose
+            targets = [ ]
+            s_pos = frenetpath_spline.cur_s
+            for i in range(mpc_controller.N):
+                step_increment = (sim.vx)*dt
+                trg = frenetpath_spline.calc_position(s_pos)
+                t_yaw = frenetpath_spline.calc_yaw(s_pos)
+                trg = [ trg[0], trg[1], t_yaw ]
+                targets.append(trg)
+                s_pos += step_increment
+            steer = mpc_controller.opt_step(targets, sim)
 
         # Make one step simulation via model integration
         sim.integrate(ax, float(steer))
@@ -268,8 +267,8 @@ def main():
     all_results = []
     actual_state = []
     labels = []
-    for integrator, model in configs:
-        actual_state = run_simulation(ax, steer, dt, integrator, model, steps)
+    for integrator, model in sim_params.vehicle_model:
+        actual_state = run_simulation(sim_params.ax, sim_params.steer, sim_params.dt, integrator, model, sim_params.steps)
         all_results.append(actual_state)
         labels.append(f"{integrator.capitalize()} - {model.capitalize()}")
 
@@ -286,13 +285,13 @@ def main():
     frenet_y_results = [result[9] for result in all_results]
 
     # Plot comparisons for each state variable
-    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results)
-    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)")
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)")
-    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)")
-    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)")
-    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front")
-    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear")
+    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show=True)
+    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show=True)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show=True)
+    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show=True)
+    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show=True)
+    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show=True)
+    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show=True)
 
 if __name__ == "__main__":
     main()

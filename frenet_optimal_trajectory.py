@@ -22,7 +22,7 @@ import sys
 import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent))
 import matplotlib
-matplotlib.use('TkAgg')  # Or 'Agg', 'Qt5Agg', etc.
+matplotlib.use('Qt5Agg')  # Or 'Agg', 'Qt5Agg', etc.
 from quintic_polynomials_planner import QuinticPolynomial 
 import cubic_spline_planner
 
