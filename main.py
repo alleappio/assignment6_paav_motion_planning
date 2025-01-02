@@ -17,6 +17,7 @@ from parameters import PIDParameters as PID_params
 from parameters import PurepursuitParameters as PP_params
 from parameters import StanleyParameters as stanley_params
 from parameters import MpcParameters as MPC_params
+from parameters import FrenetParameters as frenet_params
 
 matplotlib.use('Qt5Agg')  # Or 'Agg', 'Qt5Agg', etc.
 
@@ -28,6 +29,26 @@ stanley_controller = stanley.StanleyController(stanley_params.k_stanley, vehicle
 mpc_controller = mpc.MPC(MPC_params.T, MPC_params.dt, MPC_params.N, vehicle_params.max_steer, vehicle_params.min_steer, MPC_params.gain_mult)
 
 #Planning
+frenet_planner = fp.FrenetPlanner(
+    frenet_params.MAX_SPEED,
+    frenet_params.MAX_ACCEL,
+    frenet_params.MAX_CURVATURE, 
+    frenet_params.MAX_ROAD_WIDTH,
+    frenet_params.D_ROAD_W, 
+    frenet_params.DT,
+    frenet_params.MAX_T,
+    frenet_params.MIN_T,
+    frenet_params.TARGET_SPEED,
+    frenet_params.D_T_S,
+    frenet_params.N_S_SAMPLE,
+    frenet_params.ROBOT_RADIUS,
+    frenet_params.K_J,
+    frenet_params.K_T,
+    frenet_params.K_D,
+    frenet_params.K_LAT,
+    frenet_params.K_LON,
+)
+
 # obstacle lists
 ob = np.array([[100.0, -0.5],
                 [400.0, 0.5],
@@ -134,18 +155,19 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     for step in range(steps):
     
         # Print time
-        # print("Time:", step*dt)
+        print("Time:", step*dt)
 
         # Calculate ax to track speed
         ax = long_control_pid.compute(sim_params.target_speed, sim.vx, dt)
 
         ############# Frenet-planner
 
-        frenet_path = fp.frenet_optimal_planning(
+        frenet_path = frenet_planner.frenet_optimal_planning(
             path_spline, s0, c_speed, c_accel, c_d, c_d_d, c_d_dd, ob)
         
         if(frenet_path is None):
-            # print("None available paths found from Frenet...")
+            if(sim_params.verbose):
+                print("None available paths found from Frenet...")
             break
 
         frenetpath_spline = cubic_spline_planner.Spline2D(frenet_path.x, frenet_path.y)
@@ -184,8 +206,9 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         ################
 
         if(abs(local_error[1]) > 4.0):
-            print("Lateral error is higher than 4.0... ending the simulation")
-            print("Lateral error: ", local_error[1])
+            if(sim_params.verbose):
+                print("Lateral error is higher than 4.0... ending the simulation")
+                print("Lateral error: ", local_error[1])
             break
 
         # get target pose
@@ -193,7 +216,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         if(abs(path_spline.calc_curvature(path_spline.cur_s)) > PP_params.limit_curvature):
             Lf += PP_params.k_c / abs(path_spline.calc_curvature(path_spline.cur_s))
 
-        s_pos = frenetpath_spline.cur_s + Lf # TO-DO: Extend it to depend on curvature and/or speed
+        s_pos = frenetpath_spline.cur_s + Lf 
 
         trg = frenetpath_spline.calc_position(s_pos)
         trg = [ trg[0], trg[1] ]
