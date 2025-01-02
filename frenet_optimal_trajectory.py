@@ -258,19 +258,19 @@ class FrenetPlanner():
         return best_path
 
 
-    def generate_target_course(self, x, y):
-        csp = cubic_spline_planner.Spline2D(x, y)
-        s = np.arange(0, csp.s[-1], 0.1)
+def generate_target_course(x, y):
+    csp = cubic_spline_planner.Spline2D(x, y)
+    s = np.arange(0, csp.s[-1], 0.1)
 
-        rx, ry, ryaw, rk = [], [], [], []
-        for i_s in s:
-            ix, iy = csp.calc_position(i_s)
-            rx.append(ix)
-            ry.append(iy)
-            ryaw.append(csp.calc_yaw(i_s))
-            rk.append(csp.calc_curvature(i_s))
+    rx, ry, ryaw, rk = [], [], [], []
+    for i_s in s:
+        ix, iy = csp.calc_position(i_s)
+        rx.append(ix)
+        ry.append(iy)
+        ryaw.append(csp.calc_yaw(i_s))
+        rk.append(csp.calc_curvature(i_s))
 
-        return rx, ry, ryaw, rk, csp
+    return rx, ry, ryaw, rk, csp
 
 def load_path(file_path):
     file = open(file_path, "r")

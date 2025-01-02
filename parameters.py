@@ -10,7 +10,7 @@ class SimulationParameters:
     vehicle_model = [
         ("rk4", "nonlinear"),
     ]
-    verbose = False
+    verbose = True
 
 
 class VehicleParameters:
@@ -24,16 +24,16 @@ class VehicleParameters:
 
 
 class PIDParameters:
-    kp = 1.7                  # Proportional gain
-    ki = 0.7                  # Integrative gain
-    kd = 0.1                  # Derivative gain
+    kp = 2.3                  # Proportional gain
+    ki = 1.7                  # Integrative gain
+    kd = 0.01                  # Derivative gain
     output_limits = (-2, 2)   # Saturation limits
 
 
 class PurepursuitParameters:
-    k_v = 0.13                # Speed proportional gain for Pure Pursuit
-    k_c = 0.05                # Curve proportional gain for Pure Pursuit
-    limit_curvature = 0.01    # Minimum heading angle for adding curve proportional gain
+    k_v = 0.7                # Speed proportional gain for Pure Pursuit
+    k_c = 0.04                # Curve proportional gain for Pure Pursuit
+    limit_curvature = 0.001    # Minimum heading angle for adding curve proportional gain
     look_ahead = 1.0          # Minimum look-ahead distance for Pure Pursuit
 
 
@@ -53,24 +53,24 @@ class FrenetParameters:
     SIM_LOOP = 500
 
     # Parameter
-    MAX_SPEED = SimulationParameters.target_speed # maximum speed [m/s]
-    MAX_ACCEL = 10.0  # maximum acceleration [m/ss]
-    MAX_CURVATURE = 2.0  # maximum curvature [1/m]
-    MAX_ROAD_WIDTH = 5.0  # maximum road width [m]
-    D_ROAD_W = 0.5  # road width sampling length [m]
-    DT = 0.2  # time tick [s]
-    MAX_T = 5.0  # max prediction time [s]
-    MIN_T = 4.5  # min prediction time [s]
-    TARGET_SPEED = SimulationParameters.target_speed  # target speed [m/s]
-    D_T_S = 0.5  # target speed sampling length [m/s]
-    N_S_SAMPLE = 1  # sampling number of target speed
-    ROBOT_RADIUS = 3.0  # robot radius [m]
+    MAX_SPEED = SimulationParameters.target_speed       # maximum speed [m/s]
+    MAX_ACCEL = 10.0                                    # maximum acceleration [m/ss]
+    MAX_CURVATURE = 2.0                                 # maximum curvature [1/m]
+    MAX_ROAD_WIDTH = 5.0                                # maximum road width [m]
+    D_ROAD_W = 0.5                                      # road width sampling length [m]
+    DT = 0.2                                            # time tick [s]
+    MAX_T = 5.0                                         # max prediction time [s]
+    MIN_T = 4.5                                         # min prediction time [s]
+    TARGET_SPEED = SimulationParameters.target_speed    # target speed [m/s]
+    D_T_S = 0.5                                         # target speed sampling length [m/s]
+    N_S_SAMPLE = 1                                      # sampling number of target speed
+    ROBOT_RADIUS = 3.0                                  # robot radius [m]
 
     # cost weights
-    K_J = 0.1
+    K_J = 0.5
     K_T = 0.1
     K_D = 1.0
-    K_LAT = 1.0
-    K_LON = 1.0
+    K_LAT = 0.5
+    K_LON = 1.5
 
     show_animation = True

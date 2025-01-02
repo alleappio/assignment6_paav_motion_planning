@@ -47,6 +47,7 @@ frenet_planner = fp.FrenetPlanner(
     frenet_params.K_D,
     frenet_params.K_LAT,
     frenet_params.K_LON,
+    True
 )
 
 # obstacle lists
@@ -126,7 +127,7 @@ def plot_trajectory(x_vals, y_vals, labels, path_spline, frenet_x_results, frene
     plt.legend()
     plt.grid(True)
     plt.axis("equal")
-    plt.show()
+    #plt.show()
     plt.savefig(f"{sim_params.figures_path}/trajectory.png")
     if(show):
         plt.show()
