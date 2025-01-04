@@ -2,10 +2,10 @@ class SimulationParameters:
     dt = 0.05                   # Time step (s)
     ax = 0.0                    # Constant longitudinal acceleration (m/s^2)
     steer = 0.0                 # Constant steering angle (rad)
-    sim_time = 90.0             # Simulation duration in seconds
+    sim_time = 120.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
-    target_speed = 25.0
-    controller = 'purepursuit'
+    target_speed = 20.0
+    controller = 'stanley'
     figures_path = 'figures/general'
     vehicle_model = [
         ("rk4", "nonlinear"),
@@ -24,23 +24,23 @@ class VehicleParameters:
 
 
 class PIDParameters:
-    kp = 2.3                  # Proportional gain
-    ki = 1.7                  # Integrative gain
+    kp = 2.0                  # Proportional gain
+    ki = 1.5                  # Integrative gain
     kd = 0.01                  # Derivative gain
     output_limits = (-2, 2)   # Saturation limits
 
 
 class PurepursuitParameters:
-    k_v = 0.7                # Speed proportional gain for Pure Pursuit
-    k_c = 0.04                # Curve proportional gain for Pure Pursuit
-    limit_curvature = 0.001    # Minimum heading angle for adding curve proportional gain
+    k_v = 0.35                # Speed proportional gain for Pure Pursuit
+    k_c = 0.06                # Curve proportional gain for Pure Pursuit
+    limit_curvature = 0.01    # Minimum heading angle for adding curve proportional gain
     look_ahead = 1.0          # Minimum look-ahead distance for Pure Pursuit
 
 
 class StanleyParameters:
     k_stanley = 2.9           # Gain for cross-track error for Stanley
-    k_he = 1.1                # Gain for heading error
-    k_ctc = 2.9               # Gain for cross-trac correction 
+    k_he = 1.0                # Gain for heading error
+    k_ctc = 2.7               # Gain for cross-trac correction 
 
 
 class MpcParameters:
