@@ -47,7 +47,7 @@ frenet_planner = fp.FrenetPlanner(
     frenet_params.K_D,
     frenet_params.K_LAT,
     frenet_params.K_LON,
-    False
+    sim_params.verbose
 )
 
 # obstacle lists
@@ -152,6 +152,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals = [], [], [], [], [], []
     alpha_f_vals, alpha_r_vals = [], []  # Slip angles
     frenet_x, frenet_y = [], []
+    global_lat_error_vals, local_lat_error_vals, vel_error_vals = [], [], []
 
     mpc_controller.casadi_model()
 
@@ -303,7 +304,13 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         frenet_x.append(frenet_path.x[0])
         frenet_y.append(frenet_path.y[0])
 
-    return x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals, alpha_f_vals, alpha_r_vals, frenet_x, frenet_y
+        # lateral and longitudinal error
+        vel_error = long_control_pid.previous_error
+        vel_error_vals.append(vel_error)
+        global_lat_error_vals.append(local_error)
+        local_lat_error_vals.append(frenetlocal_error)
+
+    return x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals, alpha_f_vals, alpha_r_vals, frenet_x, frenet_y, global_lat_error_vals, local_lat_error_vals, vel_error_vals
 
 def main():
     if(not os.path.exists(sim_params.figures_path)):
@@ -333,15 +340,21 @@ def main():
     alpha_r_results = [result[7] for result in all_results]
     frenet_x_results = [result[8] for result in all_results]
     frenet_y_results = [result[9] for result in all_results]
+    global_lat_error_results = [result[10] for result in all_results]
+    local_lat_error_results = [result[11] for result in all_results]
+    vel_error_results = [result[12] for result in all_results]
 
     # Plot comparisons for each state variable
-    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show=True)
-    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show=True)
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show=True)
-    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show=True)
-    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show=True)
-    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show=True)
-    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show=True)
+    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = True)
+    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = True)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = True)
+    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = True)
+    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = True)
+    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = True)
+    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = True)
+    plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = False)
+    plot_comparison(global_lat_error_results, labels, "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
+    # plot_comparison(local_lat_error_results, labels, "local lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
 
 if __name__ == "__main__":
     main()

@@ -10,7 +10,7 @@ class SimulationParameters:
     vehicle_model = [
         ("rk4", "nonlinear"),
     ]
-    verbose = False
+    verbose = True
 
 
 class VehicleParameters:
