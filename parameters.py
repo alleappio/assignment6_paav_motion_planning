@@ -5,12 +5,12 @@ class SimulationParameters:
     sim_time = 120.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
     target_speed = 20.0
-    controller = 'stanley'
+    controller = 'purepursuit'
     figures_path = 'figures/general'
     vehicle_model = [
         ("rk4", "nonlinear"),
     ]
-    verbose = True
+    verbose = False
 
 
 class VehicleParameters:
@@ -31,7 +31,7 @@ class PIDParameters:
 
 
 class PurepursuitParameters:
-    k_v = 0.35                # Speed proportional gain for Pure Pursuit
+    k_v = 0.21                # Speed proportional gain for Pure Pursuit
     k_c = 0.06                # Curve proportional gain for Pure Pursuit
     limit_curvature = 0.01    # Minimum heading angle for adding curve proportional gain
     look_ahead = 1.0          # Minimum look-ahead distance for Pure Pursuit
@@ -48,6 +48,7 @@ class MpcParameters:
     T =  1                    # Horizon length in seconds
     dt = 0.05                 # Horizon timesteps
     N = int(T/dt)             # Horizon total points
+
 
 class FrenetParameters:
     SIM_LOOP = 500
@@ -67,10 +68,10 @@ class FrenetParameters:
     ROBOT_RADIUS = 3.0                                  # robot radius [m]
 
     # cost weights
-    K_J = 0.5
+    K_J = 0.1
     K_T = 0.1
     K_D = 1.0
-    K_LAT = 0.5
-    K_LON = 1.5
+    K_LAT = 1.0
+    K_LON = 1.0
 
     show_animation = True

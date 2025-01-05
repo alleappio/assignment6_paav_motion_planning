@@ -181,6 +181,11 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         cur_position = (sim.x, sim.y)
         total_path_done += math.dist(cur_position, prev_position)
 
+        if(total_path_done > total_path):
+            total_path_done = abs(total_path_done - total_path)
+            lap_counter+=1
+            print(f"done {lap_counter} lap at time {time}")
+
         # Calculate ax to track speed
         ax = long_control_pid.compute(sim_params.target_speed, sim.vx, dt)
 
@@ -230,9 +235,8 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         ################
 
         if(abs(local_error[1]) > 4.0):
-            if(sim_params.verbose):
-                print("Lateral error is higher than 4.0... ending the simulation")
-                print("Lateral error: ", local_error[1])
+            print("Lateral error is higher than 4.0... ending the simulation")
+            print("Lateral error: ", local_error[1])
             break
 
         # get target pose
