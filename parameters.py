@@ -44,10 +44,14 @@ class StanleyParameters:
 
 
 class MpcParameters:
-    gain_mult = 1
-    T =  1                    # Horizon length in seconds
-    dt = 0.05                 # Horizon timesteps
-    N = int(T/dt)             # Horizon total points
+    gain_mult = 5.0  
+    k_x = 120.0
+    k_y = 20.0
+    k_theta = 0.5
+    k_j = 100000.0              
+    T =  1.5                    # Horizon length in seconds
+    dt = 0.05                   # Horizon timesteps
+    N = int(T/dt)               # Horizon total points
 
 
 class FrenetParameters:
