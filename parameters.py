@@ -44,12 +44,12 @@ class StanleyParameters:
 
 
 class MpcParameters:
-    gain_mult = 5.0  
+    gain_mult = 0.0  
     k_x = 120.0
-    k_y = 20.0
-    k_theta = 0.5
+    k_y = 25.0
+    k_theta = 10.0
     k_j = 100000.0              
-    T =  1.5                    # Horizon length in seconds
+    T =  2.5                    # Horizon length in seconds
     dt = 0.05                   # Horizon timesteps
     N = int(T/dt)               # Horizon total points
 
