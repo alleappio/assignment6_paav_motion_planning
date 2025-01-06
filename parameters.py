@@ -5,7 +5,7 @@ class SimulationParameters:
     sim_time = 90.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
     target_speed = 20.0
-    controller = 'stanley'
+    controller = 'purepursuit'
     figures_path = 'figures/general'
     vehicle_model = [
         ("rk4", "nonlinear"),
@@ -44,11 +44,11 @@ class StanleyParameters:
 
 
 class MpcParameters:
-    gain_mult = 0.0  
-    k_x = 120.0
-    k_y = 25.0
+    gain_mult = 1.0  
+    k_x = 200.0
+    k_y = 200.0
     k_theta = 10.0
-    k_j = 100000.0              
+    k_j = 0.0              
     T =  2.5                    # Horizon length in seconds
     dt = 0.05                   # Horizon timesteps
     N = int(T/dt)               # Horizon total points
