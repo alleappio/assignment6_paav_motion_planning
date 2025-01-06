@@ -357,7 +357,7 @@ def main():
     plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = True)
     plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = True)
     plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = False)
-    plot_comparison(global_lat_error_results, labels, "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
+    plot_comparison(global_lat_error_results, [["local error", "global error"]], "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
     # plot_comparison(local_lat_error_results, labels, "local lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
 
 if __name__ == "__main__":
