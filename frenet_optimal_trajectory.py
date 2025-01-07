@@ -225,7 +225,7 @@ class FrenetPlanner():
             #           fplist[i].c]):  # Max curvature check
             #     print("max curv exceeded")
             #     continue
-            # elif not check_collision(fplist[i], ob):
+            # elif not self.check_collision(fplist[i], ob):
             #     print("collision checks failed")
             #     continue
             if not self.check_collision(fplist[i], ob):

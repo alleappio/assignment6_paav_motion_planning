@@ -11,6 +11,7 @@ import mpc
 import cubic_spline_planner
 import math
 import frenet_optimal_trajectory as fp 
+import time
 from parameters import SimulationParameters as sim_params
 from parameters import VehicleParameters as vehicle_params
 from parameters import PIDParameters as PID_params
@@ -47,7 +48,7 @@ frenet_planner = fp.FrenetPlanner(
     frenet_params.K_D,
     frenet_params.K_LAT,
     frenet_params.K_LON,
-    sim_params.verbose
+    sim_params.frenet_verbose
 )
 
 # obstacle lists
@@ -169,14 +170,20 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     prev_position = (0.0, 0.0)
     lap_counter = 0
     prev_time=0
-    
+    frenet_time_count=0
+    tot_time = 0
     for step in range(steps):
     
         # Print time
-        time = step*dt
-        if(int(time)!=int(prev_time)):
-            print(f"time: {int(time)} seconds")
-            prev_time = time
+        cur_time = step*dt
+        if(int(cur_time)!=int(prev_time)):
+            print(f"time: {int(cur_time)} seconds")
+            if(sim_params.verbose):
+                avg_time = tot_time/frenet_time_count
+                print(f"frenet exec time: {avg_time} s")
+            tot_time = 0
+            frenet_time_count=0
+            prev_time = cur_time
 
         cur_position = (sim.x, sim.y)
         total_path_done += math.dist(cur_position, prev_position)
@@ -184,16 +191,18 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         if(total_path_done > total_path):
             total_path_done = abs(total_path_done - total_path)
             lap_counter+=1
-            print(f"done {lap_counter} lap at time {time}")
+            print(f"done {lap_counter} lap at time {cur_time}")
 
         # Calculate ax to track speed
         ax = long_control_pid.compute(sim_params.target_speed, sim.vx, dt)
 
         ############# Frenet-planner
-
+        start_time = time.time_ns()
         frenet_path = frenet_planner.frenet_optimal_planning(
             path_spline, s0, c_speed, c_accel, c_d, c_d_d, c_d_dd, ob)
-        
+        finish_time = time.time_ns()
+        tot_time+=(finish_time-start_time)/1e9
+        frenet_time_count+=1
         if(frenet_path is None):
             if(sim_params.verbose):
                 print("None available paths found from Frenet...")
@@ -241,8 +250,12 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
 
         # get target pose
         Lf = PP_params.k_v * sim.vx + PP_params.look_ahead 
-        if(abs(path_spline.calc_curvature(path_spline.cur_s)) > PP_params.limit_curvature):
-            Lf += PP_params.k_c / abs(path_spline.calc_curvature(path_spline.cur_s))
+        # if(abs(path_spline.calc_curvature(path_spline.cur_s)) > PP_params.limit_curvature):
+        #     Lf += PP_params.k_c / abs(path_spline.calc_curvature(path_spline.cur_s))
+        c = path_spline.calc_curvature(path_spline.cur_s) 
+        if(c < PP_params.limit_curvature):
+            c = PP_params.limit_curvature
+        Lf += PP_params.k_c / abs(c)
 
         s_pos = frenetpath_spline.cur_s + Lf 
 
@@ -283,7 +296,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
                 trg = [ trg[0], trg[1], t_yaw ]
                 targets.append(trg)
                 s_pos += step_increment
-            steer = mpc_controller.opt_step(targets, sim)
+            steer = np.float64(mpc_controller.opt_step(targets, sim))
 
         prev_position = cur_position
 
@@ -350,12 +363,12 @@ def main():
 
     # Plot comparisons for each state variable
     plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = True)
-    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = True)
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = True)
-    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = True)
-    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = True)
-    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = True)
-    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = True)
+    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = False)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = False)
+    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = False)
+    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = False)
+    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = False)
+    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = False)
     plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = False)
     plot_comparison(global_lat_error_results, [["local error", "global error"]], "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
     # plot_comparison(local_lat_error_results, labels, "local lateral error comparison", "Time Step", "Lateral Error (m)", show = True)

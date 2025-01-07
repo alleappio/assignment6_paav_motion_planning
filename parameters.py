@@ -2,15 +2,16 @@ class SimulationParameters:
     dt = 0.05                   # Time step (s)
     ax = 0.0                    # Constant longitudinal acceleration (m/s^2)
     steer = 0.0                 # Constant steering angle (rad)
-    sim_time = 90.0             # Simulation duration in seconds
+    sim_time = 150.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
-    target_speed = 20.0
+    target_speed = 15.0
     controller = 'purepursuit'
     figures_path = 'figures/general'
     vehicle_model = [
         ("rk4", "nonlinear"),
     ]
-    verbose = False
+    verbose = True
+    frenet_verbose = False
 
 
 class VehicleParameters:
@@ -33,14 +34,15 @@ class PIDParameters:
 class PurepursuitParameters:
     k_v = 0.21                # Speed proportional gain for Pure Pursuit
     k_c = 0.06                # Curve proportional gain for Pure Pursuit
-    limit_curvature = 0.01    # Minimum heading angle for adding curve proportional gain
+    limit_curvature = 0.01    # Minimum heading angle for adding curve proportional gain 0.01
     look_ahead = 1.0          # Minimum look-ahead distance for Pure Pursuit
 
 
+
 class StanleyParameters:
-    k_stanley = 2.9           # Gain for cross-track error for Stanley
-    k_he = 1.0                # Gain for heading error
-    k_ctc = 2.7               # Gain for cross-trac correction 
+    k_stanley = 2.0           # Gain for cross-track error for Stanley
+    k_he = 8.5                # Gain for heading error
+    k_ctc = 0.7  
 
 
 class MpcParameters:
@@ -63,7 +65,7 @@ class FrenetParameters:
     MAX_CURVATURE = 2.0                                 # maximum curvature [1/m]
     MAX_ROAD_WIDTH = 5.0                                # maximum road width [m]
     D_ROAD_W = 0.5                                      # road width sampling length [m]
-    DT = 0.2                                            # time tick [s]
+    DT = 0.3                                            # time tick [s]
     MAX_T = 5.0                                         # max prediction time [s]
     MIN_T = 4.5                                         # min prediction time [s]
     TARGET_SPEED = SimulationParameters.target_speed    # target speed [m/s]
