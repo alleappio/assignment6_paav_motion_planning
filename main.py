@@ -384,9 +384,9 @@ def main():
     vel_error_results = [result[12] for result in all_results]
 
     # Plot comparisons for each state variable
-    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = True)
+    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = False)
     plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = False)
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = True)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = False)
     plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = False)
     plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = False)
     plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = False)

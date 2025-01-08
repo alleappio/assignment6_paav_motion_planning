@@ -2,7 +2,7 @@ class SimulationParameters:
     dt = 0.05                   # Time step (s)
     ax = 0.0                    # Constant longitudinal acceleration (m/s^2)
     steer = 0.0                 # Constant steering angle (rad)
-    sim_time = 90.0             # Simulation duration in seconds
+    sim_time = 80.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
     target_speed = 25.0
     controller = 'purepursuit'
@@ -73,10 +73,10 @@ class FrenetParameters:
     ROBOT_RADIUS = 3.0                                  # robot radius [m]
 
     # cost weights
-    K_J = 0.0
-    K_T = 0.0
-    K_D = 2.0
+    K_J = 0.1
+    K_T = 0.1
+    K_D = 1.0
     K_LAT = 1.0
-    K_LON = 2.5
+    K_LON = 1.0
 
     show_animation = True
