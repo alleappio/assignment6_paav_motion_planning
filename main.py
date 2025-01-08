@@ -201,6 +201,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             total_path_done = abs(total_path_done - total_path)
             lap_counter+=1
             print(f"done {lap_counter} lap at time {cur_time}")
+            
 
         # Calculate ax to track speed
         ax = long_control_pid.compute(sim_params.target_speed, sim.vx, dt)
@@ -257,10 +258,15 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             print("Lateral error: ", local_error[1])
             break
 
+        for i in range(len(ob)):
+            dx = abs(ob[i][0]-sim.x)
+            dy = abs(ob[i][1]-sim.y)
+            R = frenet_params.ROBOT_RADIUS
+            if(dx*dx + dy*dy <= R*R):
+                print(f"hit obstacle {i} in position x:{ob[i][0], ob[i][1]}")
+
         # get target pose
         Lf = PP_params.k_v * sim.vx + PP_params.look_ahead 
-        # if(abs(path_spline.calc_curvature(path_spline.cur_s)) > PP_params.limit_curvature):
-        #     Lf += PP_params.k_c / abs(path_spline.calc_curvature(path_spline.cur_s))
         c = path_spline.calc_curvature(path_spline.cur_s) 
         if(c < PP_params.limit_curvature):
             c = PP_params.limit_curvature
@@ -278,13 +284,11 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         # Calculate steer to track path
         
         ####### Pure Pursuit
-        # steer = 0
         # Compute the look-ahead distance
         if(sim_params.controller == 'purepursuit'):
             steer = pp_controller.compute_steering_angle(loc_trg, sim.theta, Lf)
         
         ###### Stanley
-        #TO-DO: Move actual position (CoG) to the front axle for stanley
         # Adjust CoG position to the front axle position
         if(sim_params.controller == 'stanley'):
             px_front = local_position_projected[0] + vehicle_params.lf * math.cos(sim.theta)
