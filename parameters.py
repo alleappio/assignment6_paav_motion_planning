@@ -5,7 +5,7 @@ class SimulationParameters:
     sim_time = 90.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
     target_speed = 25.0
-    controller = 'mpc'
+    controller = 'purepursuit'
     figures_path = 'figures/general'
     vehicle_model = [
         ("rk4", "nonlinear"),
@@ -45,11 +45,11 @@ class StanleyParameters:
 
 
 class MpcParameters:
-    gain_mult = 1.5  
-    k_x = 200.0
-    k_y = 200.0
+    gain_mult = 1.0  
+    k_x = 100.0
+    k_y = 100.0
     k_theta = 11.0
-    k_j = 0.0              
+    k_j = 1000000.0              
     T =  2.5                    # Horizon length in seconds
     dt = 0.05                   # Horizon timesteps
     N = int(T/dt)               # Horizon total points
@@ -73,10 +73,10 @@ class FrenetParameters:
     ROBOT_RADIUS = 3.0                                  # robot radius [m]
 
     # cost weights
-    K_J = 0.1
-    K_T = 0.1
-    K_D = 1.0
+    K_J = 0.0
+    K_T = 0.0
+    K_D = 2.0
     K_LAT = 1.0
-    K_LON = 1.0
+    K_LON = 2.5
 
     show_animation = True
