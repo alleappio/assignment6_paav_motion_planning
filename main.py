@@ -181,6 +181,9 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     prev_time=0
     frenet_time_count=0
     tot_time = 0
+    old_hit = -1
+    hit_count = []
+
     for step in range(steps):
     
         # Print time
@@ -262,8 +265,11 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             dx = abs(ob[i][0]-sim.x)
             dy = abs(ob[i][1]-sim.y)
             R = frenet_params.ROBOT_RADIUS
-            if(dx*dx + dy*dy <= R*R):
+            if(dx*dx + dy*dy <= R*R and old_hit!=i):
                 print(f"hit obstacle {i} in position x:{ob[i][0], ob[i][1]}")
+                old_hit=i
+                if(i not in hit_count):
+                    hit_count.append(i)
 
         # get target pose
         Lf = PP_params.k_v * sim.vx + PP_params.look_ahead 
@@ -340,6 +346,7 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
         global_lat_error_vals.append(local_error)
         local_lat_error_vals.append(frenetlocal_error)
 
+    print(f"Hitted {len(hit_count)} obstacles out of {len(ob)}")
     return x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals, alpha_f_vals, alpha_r_vals, frenet_x, frenet_y, global_lat_error_vals, local_lat_error_vals, vel_error_vals
 
 def main():
