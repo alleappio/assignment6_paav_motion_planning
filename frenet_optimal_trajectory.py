@@ -286,13 +286,32 @@ def load_path(file_path):
 
 def main():
     print(__file__ + " start!!")
+    
+    fp = FrenetPlanner(
+        25.0,
+        10.0,
+        2.0 ,
+        5.0 ,
+        0.5,
+        0.2 ,
+        5.0 ,
+        4.5 ,
+        25.0,
+        0.5,
+        1,
+        3.0 ,
+        0.1,
+        0.1,
+        1.0,
+        1.0,
+        1.0,
+    ) 
 
     # way points
     # wx = [0.0, 10.0, 20.5, 35.0, 70.5]
     # wy = [0.0, -6.0, 5.0, 6.5, 0.0]
     # obstacle lists
-    ob = np.array([[40.0, 0.0],
-                    [100.0, -0.5],
+    ob = np.array([[100.0, -0.5],
                     [400.0, 0.5],
                     [570.0, 29.0],
                     [120.0, 200.0],
@@ -314,9 +333,9 @@ def main():
     area = 20.0  # animation area length [m]
 
     for i in range(SIM_LOOP):
-        path = frenet_optimal_planning(
+        path = fp.frenet_optimal_planning(
             csp, s0, c_speed, c_accel, c_d, c_d_d, c_d_dd, ob)
-
+        print(type(path))
         s0 = path.s[1]
         c_d = path.d[1]
         c_d_d = path.d_d[1]
