@@ -202,9 +202,12 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             total_path_done += math.dist(cur_position, prev_position)
 
             if(total_path_done > total_path):
+            #if(sim.x == 0 and sim.y < 4 and sim.y > -4):
                 total_path_done = abs(total_path_done - total_path)
                 lap_counter+=1
                 print(f"done {lap_counter} lap at time {cur_time}")
+                print("interrupting the simulation...")
+                break
                 
 
             # Calculate ax to track speed
@@ -418,19 +421,19 @@ def main():
 
     # Plot comparisons for each state variable
     plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = True)
-    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = True)
-    plot_comparison(steer_results, labels, "Steering Angle Comparison", "Time Step", "Steering Angle (rad)", show = True)
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = True)
-    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = True)
-    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = True)
-    plot_comparison(ax_results, labels, "Longiudinal Acceleration Comparison", "Time Step", "Acceleration (m/s^2)", show = True)
-    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = True)
-    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = True)
-    plot_comparison(beta_results, labels, "Side Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Side", show = True)
-    plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = True)
+    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = False)
+    plot_comparison(steer_results, labels, "Steering Angle Comparison", "Time Step", "Steering Angle (rad)", show = False)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = False)
+    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = False)
+    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = False)
+    plot_comparison(ax_results, labels, "Longiudinal Acceleration Comparison", "Time Step", "Acceleration (m/s^2)", show = False)
+    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = False)
+    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = False)
+    plot_comparison(beta_results, labels, "Side Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Side", show = False)
+    plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = False)
     plot_comparison(lat_error_results, [["local error", "global error"]], "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
-    plot_comparison(Fyf_results, labels, "Front Lateral Force", "Time Step", "Lateral Force - front (N)", show = True)
-    plot_comparison(Fyr_results, labels, "Rear Lateral Force", "Time Step", "Lateral Force - rear (N)", show = True)
+    plot_comparison(Fyf_results, labels, "Front Lateral Force", "Time Step", "Lateral Force - front (N)", show = False)
+    plot_comparison(Fyr_results, labels, "Rear Lateral Force", "Time Step", "Lateral Force - rear (N)", show = False)
 
 if __name__ == "__main__":
     main()
