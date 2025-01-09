@@ -159,10 +159,11 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
     sim = Simulation(vehicle_params.lf, vehicle_params.lr, vehicle_params.mass, vehicle_params.Iz, dt, integrator=integrator, model=model)
 
     # Storage for state variables and slip angles
-    x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals = [], [], [], [], [], []
+    x_vals, y_vals, theta_vals, steer_angle_vals, vx_vals, vy_vals, r_vals, ax_vals = [], [], [], [], [], [], [], []
     alpha_f_vals, alpha_r_vals = [], []  # Slip angles
-    frenet_x, frenet_y = [], []
-    global_lat_error_vals, local_lat_error_vals, vel_error_vals = [], [], []
+    frenet_x, frenet_y, beta_vals = [], [], []
+    Fyf_vals, Fyr_vals = [], []
+    lat_error_vals, vel_error_vals = [], []
 
     mpc_controller.casadi_model()
 
@@ -330,6 +331,8 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             vx_vals.append(sim.vx)
             vy_vals.append(sim.vy)
             r_vals.append(sim.r)
+            steer_angle_vals.append(steer)
+            ax_vals.append(ax)
 
             # Calculate slip angles for front and rear tires
             alpha_f = steer - np.arctan((sim.vy + sim.l_f * sim.r) / max(0.5, sim.vx))  # Front tire slip angle
@@ -338,19 +341,45 @@ def run_simulation(ax, steer, dt, integrator, model, steps=500):
             alpha_f_vals.append(alpha_f)
             alpha_r_vals.append(alpha_r)
 
+            # Calculate side slip angle
+            beta = np.arctan(sim.vy/sim.vx)
+            beta_vals.append(beta)
+
             frenet_x.append(frenet_path.x[0])
             frenet_y.append(frenet_path.y[0])
 
             # lateral and longitudinal error
             vel_error = long_control_pid.previous_error
             vel_error_vals.append(vel_error)
-            global_lat_error_vals.append(local_error)
-            local_lat_error_vals.append(frenetlocal_error)
-    except KeyboardInterrupt:
-      pass
-    print(f"Hitted {len(hit_count)} obstacles out of {len(ob)}")
-    return x_vals, y_vals, theta_vals, vx_vals, vy_vals, r_vals, alpha_f_vals, alpha_r_vals, frenet_x, frenet_y, global_lat_error_vals, local_lat_error_vals, vel_error_vals
+            lat_error_vals.append(local_error)
+            # Lateral tire forces
+            Fyf, Fyr = 0, 0
+            if model == "linear":
+                # Vertical forces (nominal vertical load)
+                Fz_f_nominal = (sim.l_r/sim.l_wb)*sim.mass*9.81
+                Fz_r_nominal = (sim.l_f/sim.l_wb)*sim.mass*9.81
 
+                # Front and rear lateral forces
+                Fyf = Fz_f_nominal * sim.Cf * alpha_f
+                Fyr = Fz_r_nominal * sim.Cr * alpha_r
+
+            if model == "nonlinear":
+                # Vertical forces (nominal vertical load)
+                Fz_f_nominal = (sim.l_r/sim.l_wb)*sim.mass*9.81
+                Fz_r_nominal = (sim.l_f/sim.l_wb)*sim.mass*9.81
+
+                # Front and rear lateral forces
+                Fyf = Fz_f_nominal * sim.D * np.sin(sim.C*np.arctan(sim.B*alpha_f - sim.E*(sim.B * alpha_f - np.arctan(sim.B*alpha_f))))
+                Fyr = Fz_r_nominal * sim.D * np.sin(sim.C*np.arctan(sim.B*alpha_r - sim.E*(sim.B * alpha_r - np.arctan(sim.B*alpha_r))))
+
+            Fyf_vals.append(Fyf)
+            Fyr_vals.append(Fyr)
+    except KeyboardInterrupt:
+      print("Interrupted simulation")
+
+    print(f"Hitted {len(hit_count)} obstacles out of {len(ob)}")
+
+    return x_vals, y_vals, theta_vals, steer_angle_vals, vx_vals, vy_vals, r_vals, ax_vals, alpha_f_vals, alpha_r_vals, beta_vals, frenet_x, frenet_y, lat_error_vals, vel_error_vals, Fyf_vals, Fyr_vals
 def main():
     if(not os.path.exists(sim_params.figures_path)):
         os.makedirs(sim_params.figures_path)
@@ -372,28 +401,36 @@ def main():
     x_results = [result[0] for result in all_results]
     y_results = [result[1] for result in all_results]
     theta_results = [result[2] for result in all_results]
-    vx_results = [result[3] for result in all_results]
-    vy_results = [result[4] for result in all_results]
-    r_results = [result[5] for result in all_results]
-    alpha_f_results = [result[6] for result in all_results]
-    alpha_r_results = [result[7] for result in all_results]
-    frenet_x_results = [result[8] for result in all_results]
-    frenet_y_results = [result[9] for result in all_results]
-    global_lat_error_results = [result[10] for result in all_results]
-    local_lat_error_results = [result[11] for result in all_results]
-    vel_error_results = [result[12] for result in all_results]
+    steer_results = [result[3] for result in all_results]
+    vx_results = [result[4] for result in all_results]
+    vy_results = [result[5] for result in all_results]
+    r_results = [result[6] for result in all_results]
+    ax_results = [result[7] for result in all_results]
+    alpha_f_results = [result[8] for result in all_results]
+    alpha_r_results = [result[9] for result in all_results]
+    beta_results = [result[10] for result in all_results]
+    frenet_x_results = [result[11] for result in all_results]
+    frenet_y_results = [result[12] for result in all_results]
+    lat_error_results = [result[13] for result in all_results]
+    vel_error_results = [result[14] for result in all_results]
+    Fyf_results = [result[15] for result in all_results]
+    Fyr_results = [result[16] for result in all_results]
 
     # Plot comparisons for each state variable
-    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = False)
-    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = False)
-    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = False)
-    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = False)
-    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = False)
-    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = False)
-    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = False)
-    plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = False)
-    plot_comparison(global_lat_error_results, [["local error", "global error"]], "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
-    # plot_comparison(local_lat_error_results, labels, "local lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
+    plot_trajectory(x_results, y_results, labels, path_spline, frenet_x_results, frenet_y_results, show = True)
+    plot_comparison(theta_results, labels, "Heading Angle Comparison", "Time Step", "Heading Angle (rad)", show = True)
+    plot_comparison(steer_results, labels, "Steering Angle Comparison", "Time Step", "Steering Angle (rad)", show = True)
+    plot_comparison(vx_results, labels, "Longitudinal Velocity Comparison", "Time Step", "Velocity (m/s)", show = True)
+    plot_comparison(vy_results, labels, "Lateral Velocity Comparison", "Time Step", "Lateral Velocity (m/s)", show = True)
+    plot_comparison(r_results, labels, "Yaw Rate Comparison", "Time Step", "Yaw Rate (rad/s)", show = True)
+    plot_comparison(ax_results, labels, "Longiudinal Acceleration Comparison", "Time Step", "Acceleration (m/s^2)", show = True)
+    plot_comparison(alpha_f_results, labels, "Front Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Front", show = True)
+    plot_comparison(alpha_r_results, labels, "Rear Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Rear", show = True)
+    plot_comparison(beta_results, labels, "Side Slip Angle Comparison", "Time Step", "Slip Angle (rad) - Side", show = True)
+    plot_comparison(vel_error_results, labels, "velocity error comparison", "Time Step", "Velocity Error (%)", show = True)
+    plot_comparison(lat_error_results, [["local error", "global error"]], "global lateral error comparison", "Time Step", "Lateral Error (m)", show = True)
+    plot_comparison(Fyf_results, labels, "Front Lateral Force", "Time Step", "Lateral Force - front (N)", show = True)
+    plot_comparison(Fyr_results, labels, "Rear Lateral Force", "Time Step", "Lateral Force - rear (N)", show = True)
 
 if __name__ == "__main__":
     main()
