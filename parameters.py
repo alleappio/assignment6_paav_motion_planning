@@ -2,11 +2,11 @@ class SimulationParameters:
     dt = 0.05                   # Time step (s)
     ax = 0.0                    # Constant longitudinal acceleration (m/s^2)
     steer = 0.0                 # Constant steering angle (rad)
-    sim_time = 80.0             # Simulation duration in seconds
+    sim_time = 180.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
-    target_speed = 25.0
+    target_speed = 10.0
     controller = 'purepursuit'
-    figures_path = 'figures/general'
+    figures_path = 'figures/exercise1/speed1/purepursuit'
     vehicle_model = [
         ("rk4", "nonlinear"),
     ]
