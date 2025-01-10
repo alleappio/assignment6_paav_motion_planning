@@ -4,11 +4,11 @@ class SimulationParameters:
     steer = 0.0                 # Constant steering angle (rad)
     sim_time = 180.0             # Simulation duration in seconds
     steps = int(sim_time / dt)  # Simulation steps (30 seconds)
-    target_speed = 10.0
-    controller = 'purepursuit'
-    figures_path = 'figures/exercise1/speed1/purepursuit'
+    target_speed = 25.0
+    controller = 'mpc'
+    figures_path = 'figures/exercise2/speed2/mpc'
     vehicle_model = [
-        ("rk4", "nonlinear"),
+        ("rk4", "kinematic"),
     ]
     verbose = True
     frenet_verbose = False
@@ -56,7 +56,27 @@ class MpcParameters:
 
 
 class FrenetParameters:
-    MAX_SPEED = 25.0  # maximum speed [m/s]
+    #MAX_SPEED = SimulationParameters.target_speed  # maximum speed [m/s]
+    #MAX_ACCEL = 10.0  # maximum acceleration [m/ss]
+    #MAX_CURVATURE = 2.0  # maximum curvature [1/m]
+    #MAX_ROAD_WIDTH = 5.0  # maximum road width [m]
+    #D_ROAD_W = 0.5  # road width sampling length [m]
+    #DT = 0.2  # time tick [s]
+    #MAX_T = 5.0  # max prediction time [s]
+    #MIN_T = 4.5  # min prediction time [s]
+    #TARGET_SPEED = SimulationParameters.target_speed  # target speed [m/s]
+    #D_T_S = 0.5  # target speed sampling length [m/s]
+    #N_S_SAMPLE = 1  # sampling number of target speed
+    #ROBOT_RADIUS = 3.0  # robot radius [m]
+
+    ## cost weights
+    #K_J = 0.1
+    #K_T = 0.1
+    #K_D = 1.0
+    #K_LAT = 1.0
+    #K_LON = 1.0
+    # Parameter
+    MAX_SPEED = SimulationParameters.target_speed  # maximum speed [m/s]
     MAX_ACCEL = 10.0  # maximum acceleration [m/ss]
     MAX_CURVATURE = 2.0  # maximum curvature [1/m]
     MAX_ROAD_WIDTH = 5.0  # maximum road width [m]
@@ -64,7 +84,7 @@ class FrenetParameters:
     DT = 0.2  # time tick [s]
     MAX_T = 5.0  # max prediction time [s]
     MIN_T = 4.5  # min prediction time [s]
-    TARGET_SPEED = 25.0  # target speed [m/s]
+    TARGET_SPEED = SimulationParameters.target_speed  # target speed [m/s]
     D_T_S = 0.5  # target speed sampling length [m/s]
     N_S_SAMPLE = 1  # sampling number of target speed
     ROBOT_RADIUS = 3.0  # robot radius [m]
@@ -75,23 +95,3 @@ class FrenetParameters:
     K_D = 0.5
     K_LAT = 1.0
     K_LON = 0.5
-    # Parameter
-    #MAX_SPEED = SimulationParameters.target_speed       # maximum speed [m/s]
-    #MAX_ACCEL = 10.0                                    # maximum acceleration [m/ss]
-    #MAX_CURVATURE = 2.0                                 # maximum curvature [1/m]
-    #MAX_ROAD_WIDTH = 5.0                                # maximum road width [m]
-    #D_ROAD_W = 0.5                                      # road width sampling length [m]
-    #DT = 0.25                                            # time tick [s]
-    #MAX_T = 5.5                                         # max prediction time [s]
-    #MIN_T = 5.0                                         # min prediction time [s]
-    #TARGET_SPEED = SimulationParameters.target_speed    # target speed [m/s]
-    #D_T_S = 0.5                                         # target speed sampling length [m/s]
-    #N_S_SAMPLE = 1                                      # sampling number of target speed
-    #ROBOT_RADIUS = 3.0                                  # robot radius [m]
-
-    ## cost weights
-    #K_J = 0.0
-    #K_T = 0.4
-    #K_D = 0.2
-    #K_LAT = 0.05
-    #K_LON = 1.2
